@@ -45,7 +45,7 @@ protected:
 	void allocateClient(struct sockaddr_in client);
 
 	// Deallocate client from the the client set
-	void deallocateClient(struct sockaddr_in client); 
+	void deallocateClient(unsigned client); 
 
 private:
 
