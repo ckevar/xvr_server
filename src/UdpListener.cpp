@@ -59,6 +59,7 @@ int UdpListener::run() {
 			*/
 			if (bytesRecv == 28) {	// 28 is the size of the when client asks/for allocation
 				// Client ac
+				printf("%s\n", buffer + 20);
 				if(strcmp((char *)(buffer + 20), "ALLok_ME") == 0) {
 					fprintf(stderr, "Allocation requested\n");
 					allocateClient(client);
@@ -87,31 +88,6 @@ int UdpListener::run() {
 
 		}
 
-		int i = 1;
-		// It's an inbound message
-		// Loop through all the current connections / potential connect
-		/*while (socketCount > 0) {
-
-			if(m_master[i].revents == POLLIN) {
-				char buf[4096];
-				memset(buf, 0, 4096);
-				int sock = m_master[i].fd;
-
-				// Receive message
-				int bytesIn = recv(sock, buf, 4096, 0);
-				if (bytesIn <= 0) {
-					// Drop the client
-					onClientDisconnected(sock);
-					close(sock);
-					deallocateClient(sock);
-				}
-				else {
-					onMessageReceived(sock, buf, bytesIn);
-				}
-				socketCount--;
-			}
-			i++;
-		}*/
 	}
 
 	// Remove the listening socket from the master file descriptor set and close it
