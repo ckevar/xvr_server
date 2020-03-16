@@ -6,8 +6,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
-int UdpListener::init()
-{
+int UdpListener::init() {
 	// Create a socket
 	m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (m_socket < 0) {
@@ -25,11 +24,9 @@ int UdpListener::init()
 		fprintf(stderr, "[ERROR:] at binding\n");
 		return -1;
 	}
-	fprintf(stderr, "%u\n", AF_INET);
 	// Create the master file descriptor set and assing -1 file descriptor, and no event
-	for (int i = 0; i < (MAX_CLIENTS + 1); ++i) {
-		m_clients[i].sin_family = 0;
-	}
+	for (int i = 0; i < MAX_CLIENTS; ++i)
+		m_clients[i].addr.sin_family = 0;
 
 	// Add our first socket that we're interested in interacting with; the listening socket!
 	// It's important that this socket is added for our server or else we won't 'hear' incoming
@@ -42,45 +39,48 @@ int UdpListener::init()
 }
 
 int UdpListener::run() {
-	// this will be changed by the \quit command (see below, bonus not in video!)
+	unsigned char buffer[64];
+	int bytesRecv;
+	struct sockaddr_udp cliaddr;
 
 	while (running) {
 		std::cout << "[DEBUG:] Available seats " << available << " out of " << MAX_CLIENTS << std::endl;
-		// m_master[0].events = (available > 0) ? POLLIN : 0;	// Updating the event based on the availability
-		m_master[0].events = POLLIN;
+		m_master[0].events = (available > 0) ? POLLIN : 0;	// Updating the event based on the availability
+		
 		// See who's talking to us
 		int socketCount = poll(m_master, 1, -1);	// Wait for connections
-		// Is it an inbound communication?
+		
+		// if it's an Incoming data?
 		if (m_master[0].revents == POLLIN) {
-			// Accept a new connection
-			int client = 0;
-			//int client = accept(m_socket, nullptr, nullptr);
-			int n;
-			unsigned len;
-			unsigned char buffer[1024];
-			struct sockaddr_in cliaddr;
-			n = recvfrom(m_socket, (unsigned char *)buffer, 1024, MSG_WAITALL, (struct sockaddr *) &cliaddr, &len);
+			// Receive from a client
+			bytesRecv = recvfrom(m_socket, buffer, 64, MSG_WAITALL, (struct sockaddr *) &cliaddr.addr, &cliaddr.len);
 			/*printf("Client: \n\tfamiliy: %d\n\tport: %d\n\t addr: %u\n\t zero: %s\n", 
 			       cliaddr.sin_family, cliaddr.sin_port, cliaddr.sin_addr.s_addr, cliaddr.sin_zero);
 			*/
-			if (n == 28) {
-				char cmd[8];
-				//strcpy(cmd, buffer+20);
+			if (bytesRecv == 28) {	// 28 is the size of the when client asks/for allocation
+				// Client ac
 				if(strcmp((char *)(buffer + 20), "ALLok_ME") == 0) {
 					fprintf(stderr, "Allocation requested\n");
-					// allocateClient(cliaddr);
+					allocateClient(cliaddr);
 					// onClientConnected(&cliaddr);
-					// socketCount--;
+					bytesRecv = -1;
 				} else if (strcmp((char *)(buffer + 20), "DeAok_ME") == 0) {
 					fprintf(stderr, "Deallocation requested\n");
-					// deallocateClient(cliaddr.sin_addr.s_addr);
+					deallocateClient(cliaddr.addr.sin_addr.s_addr);
+					bytesRecv = -1;
 				}
 			}
-			printf("n = %d, len = %d, msg: ", n, len);
-			for (int i = 0; i < n; i++){
-				printf("%d ", buffer[i]);
+
+			if (bytesRecv > -1) {
+
+				printf("n = %d, len = %d, msg: ", n, len);
+				for (int i = 0; i < n; i++){
+					printf("%d ", buffer[i]);
+				}
+				printf("\n");
+				// broadcastToClients(cliaddr.sin_addr.s_addr, buffer, bytesRecv);
+				broadcastToClients(10, buffer, bytesRecv);
 			}
-			printf("\n");
 
 			// Add the new connection to the list of connected clients
 			//allocateClient(client);
@@ -117,20 +117,6 @@ int UdpListener::run() {
 	// Remove the listening socket from the master file descriptor set and close it
 	// to prevent anyone else trying to connect.
 	close(m_master[0].fd);
-
-	int i = 1;
-	while (available != MAX_CLIENTS) {
-
-		if (m_master[i].fd) {
-			// Get the socket number
-			close(m_master[i].fd);
-			// Remove it from the master file list and close the socket
-			m_master[i].fd = -1;
-			available++;
-		}
-		i++;
-	}
-
 	return 0;
 }
 
@@ -138,35 +124,37 @@ void UdpListener::stop(){
 	running = false;
 }
 
-void UdpListener::allocateClient(struct sockaddr_in client) {
-	unsigned i = 1;
+void UdpListener::allocateClient(struct sockaddr_udp client) {
+	unsigned i = 0;
 
-	while(m_clients[i].sin_family > 0) i++;
+	while(m_clients[i].addr.sin_family > 0) i++;
 	available--;
 	m_clients[i] = client;
 }
 
 void UdpListener::deallocateClient(unsigned client) {
-	unsigned i = 1; // starts at 1, because internal listener socket is at 0
+	unsigned i = 0; // starts at 1, because internal listener socket is at 0
 	
-	while(m_clients[i].sin_addr.s_addr != client) i++;
+	while(m_clients[i].addr.sin_addr.s_addr != client) i++;
 	available++;
 	
-	m_master[i].fd = -1;
-	m_master[i].events = 0;
+	m_clients[i].addr.sin_family = -1;
 }
 
 
-void UdpListener::sendToClient(int clientSocket, const char* msg, int length) {
-	send(clientSocket, msg, length, 0);
+// void UdpListener::sendToClient(int clientSocket, const char* msg, int length) {
+void UdpListener::sendToClient(const unsigned char *msg, int length, struct sockaddr_udp client) {
+	sendto(m_socket, msg, length, (struct sockaddr*) client.addr, client.len);
+	// send(clientSocket, msg, length, 0);
 }
 
-void UdpListener::broadcastToClients(int sendingClient, const char* msg, int length)
-{
-	for (int i = 1; i < available; i++) {
-		int outSock = m_master[i].fd;
-		if (outSock != sendingClient) {
-			sendToClient(outSock, msg, length);
+void UdpListener::broadcastToClients(unsigned sendingClient, const unsigned char* msg, int length)
+{	
+	for (int i = 0; i < MAX_CLIENTS; i++) {
+		if (m_clients[i].sin_family > 0) {
+			if (m_clients[i].sin_addr.s_addr != sendingClient) {
+				sendToClient(msg, length, m_clients[i]);
+			}
 		}
 	}
 }

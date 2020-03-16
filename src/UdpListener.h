@@ -7,8 +7,13 @@
 
 #define MAX_CLIENTS 10
 
-class UdpListener
-{
+struct {
+	sockaddr_in addr;
+	socklen_t len;
+}
+sockaddr_udp;
+
+class UdpListener {
 
 public:
 
@@ -39,10 +44,10 @@ protected:
 	void sendToClient(int clientSocket, const char* msg, int length);
 
 	// Broadcast a message from a client
-	void broadcastToClients(int sendingClient, const char* msg, int length);
+	void broadcastToClients(unsigned sendingClient, const unsigned char* msg, int length);
 
 	// Allocate client in the client set
-	void allocateClient(struct sockaddr_in client);
+	void allocateClient(struct sockaddr_udp client);
 
 	// Deallocate client from the the client set
 	void deallocateClient(unsigned client); 
@@ -53,7 +58,7 @@ private:
 	int				m_port;			// Port # for the web service
 	int				m_socket;		// Internal FD for the listening socket
 	struct pollfd	m_master[1];		// Master file descriptor set
-	struct sockaddr_in	m_clients[MAX_CLIENTS];		// Master file descriptor set
+	struct sockaddr_udp	m_clients[MAX_CLIENTS];		// Master file descriptor set
 	int				available;				// amount of available clients
 	bool 			running;		// switch to run and stop the server's while
 };
