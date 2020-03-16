@@ -41,7 +41,7 @@ protected:
 	virtual void onMessageReceived(int clientSocket, const char* msg, int length);
 
 	// Send a message to a client
-	void sendToClient(const unsigned char *msg, int length, struct sockaddr_udp client)
+	void sendToClient(const unsigned char *msg, int length, struct sockaddr_udp client);
 
 	// Broadcast a message from a client
 	void broadcastToClients(unsigned sendingClient, const unsigned char* msg, int length);
