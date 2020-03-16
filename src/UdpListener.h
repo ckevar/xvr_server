@@ -3,6 +3,7 @@
 
 #include <sys/socket.h>
 #include <poll.h>
+#include <netinet/in.h>
 
 #define MAX_CLIENTS 10
 
