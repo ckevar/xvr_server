@@ -7,11 +7,10 @@
 
 #define MAX_CLIENTS 10
 
-struct {
+struct sockaddr_udp{
 	sockaddr_in addr;
 	socklen_t len;
-}
-sockaddr_udp;
+};
 
 class UdpListener {
 
