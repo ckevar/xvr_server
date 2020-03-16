@@ -74,7 +74,7 @@ int UdpListener::run() {
 			if (bytesRecv > -1) {
 
 				printf("n = %d, len = %d, msg: ", bytesRecv, client.len);
-				for (int i = 0; i < n; i++){
+				for (int i = 0; i < bytesRecv; i++){
 					printf("%d ", buffer[i]);
 				}
 				printf("\n");
