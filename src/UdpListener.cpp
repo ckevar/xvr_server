@@ -59,7 +59,9 @@ int UdpListener::run() {
 			*/
 			if (bytesRecv == 28) {	// 28 is the size of the when client asks/for allocation
 				// Client ac
-				printf("%s\n", buffer + 20);
+				char cmd[8];
+				strcpy(cmd, buffer + 20);
+				printf("%s\n", cmd);
 				if(strcmp((char *)(buffer + 20), "ALLok_ME") == 0) {
 					fprintf(stderr, "Allocation requested\n");
 					allocateClient(client);
