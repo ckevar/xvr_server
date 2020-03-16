@@ -4,7 +4,8 @@
 #include <csignal>
 
 
-UdpListener udpServer("0.0.0.0", 50023);
+// UdpListener udpServer("0.0.0.0", 50023);
+UdpListener udpServer("0.0.0.0", 80);
 
 void signalHandler(int signum) {
 	printf("Terminating Server\n");

@@ -105,7 +105,7 @@ void UdpListener::allocateClient(struct sockaddr_udp client) {
 	unsigned i = 0;
 
 	while(m_clients[i].addr.sin_family > 0) i++;
-	std::cerr << "i = " << std::endl;
+	// std::cerr << "i = " << std::endl;
 	available--;
 	m_clients[i] = client;
 }
