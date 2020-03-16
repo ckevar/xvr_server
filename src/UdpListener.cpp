@@ -46,7 +46,7 @@ int UdpListener::run() {
 	cmd[8] = 0;
 
 	while (running) {
-		std::cout << "[DEBUG:] Available seats " << available << " out of " << MAX_CLIENTS << std::endl;
+		std::cerr << "[DEBUG:] Available seats " << available << " out of " << MAX_CLIENTS << std::endl;
 		m_master[0].events = (available > 0) ? POLLIN : 0;	// Updating the event based on the availability
 		
 		// See who's talking to us
@@ -61,7 +61,7 @@ int UdpListener::run() {
 			*/
 			if (bytesRecv == 28) {	// 28 is the size of the when client asks/for allocation
 				memcpy(cmd, buffer + 20, 8);
-				printf("%s\n", cmd);
+				
 				// did client ask for allocation?
 				if(strcmp(cmd, "ALLok_ME") == 0) {
 					fprintf(stderr, "Allocation requested\n");
@@ -86,9 +86,6 @@ int UdpListener::run() {
 				// broadcastToClients(client.addr.sin_addr.s_addr, buffer, bytesRecv);
 				broadcastToClients(10, buffer, bytesRecv);
 			}
-
-			// Add the new connection to the list of connected clients
-			//allocateClient(client);
 
 		}
 
