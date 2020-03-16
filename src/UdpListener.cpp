@@ -61,7 +61,7 @@ int UdpListener::run() {
 			*/
 			if (bytesRecv == 28) {	// 28 is the size of the when client asks/for allocation
 				memcpy(cmd, buffer + 20, 8);
-				
+
 				// did client ask for allocation?
 				if(strcmp(cmd, "ALLok_ME") == 0) {
 					fprintf(stderr, "Allocation requested\n");
@@ -105,6 +105,7 @@ void UdpListener::allocateClient(struct sockaddr_udp client) {
 	unsigned i = 0;
 
 	while(m_clients[i].addr.sin_family > 0) i++;
+	std::cerr << "i = " << std::endl;
 	available--;
 	m_clients[i] = client;
 }
