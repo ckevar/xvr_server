@@ -43,7 +43,7 @@ int UdpListener::run() {
 	int bytesRecv;
 	struct sockaddr_udp client;
 	char cmd[9];
-	cmd[8] = "\0";
+	cmd[8] = 0;
 
 	while (running) {
 		std::cout << "[DEBUG:] Available seats " << available << " out of " << MAX_CLIENTS << std::endl;
