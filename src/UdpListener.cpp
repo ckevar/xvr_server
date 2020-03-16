@@ -42,6 +42,8 @@ int UdpListener::run() {
 	unsigned char buffer[64];
 	int bytesRecv;
 	struct sockaddr_udp client;
+	char cmd[9];
+	cmd[8] = "\0";
 
 	while (running) {
 		std::cout << "[DEBUG:] Available seats " << available << " out of " << MAX_CLIENTS << std::endl;
@@ -58,16 +60,16 @@ int UdpListener::run() {
 			       client.sin_family, client.sin_port, client.sin_addr.s_addr, client.sin_zero);
 			*/
 			if (bytesRecv == 28) {	// 28 is the size of the when client asks/for allocation
-				// Client ac
-				char cmd[8];
 				memcpy(cmd, buffer + 20, 8);
 				printf("%s\n", cmd);
-				if(strcmp((char *)(buffer + 20), "ALLok_ME") == 0) {
+				// did client ask for allocation?
+				if(strcmp(cmd, "ALLok_ME") == 0) {
 					fprintf(stderr, "Allocation requested\n");
 					allocateClient(client);
 					// onClientConnected(&client);
 					bytesRecv = -1;
-				} else if (strcmp((char *)(buffer + 20), "DeAok_ME") == 0) {
+				// did client ask for deallocation?
+				} else if (strcmp(cmd, "DeAok_ME") == 0) {
 					fprintf(stderr, "Deallocation requested\n");
 					deallocateClient(client.addr.sin_addr.s_addr);
 					bytesRecv = -1;
