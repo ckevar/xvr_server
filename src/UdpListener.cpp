@@ -26,16 +26,10 @@ int UdpListener::init()
 		fprintf(stderr, "[ERROR:] at binding\n");
 		return -1;
 	}
-	// Tell the socket is for listening
-	/*if (listen(m_socket, SOMAXCONN) < 0) {
-		fprintf(stderr, "[ERROR:] at listen\n");
-		return -1;
-	}*/
-
+	fprintf(stderr, "%u\n", AF_INET);
 	// Create the master file descriptor set and assing -1 file descriptor, and no event
 	for (int i = 0; i < (MAX_CLIENTS + 1); ++i) {
-		m_master[i].fd = -1;
-		m_master[i].events = 0;
+		m_clients[i].sin_family = 0;
 	}
 
 	// Add our first socket that we're interested in interacting with; the listening socket!
@@ -73,10 +67,14 @@ int UdpListener::run() {
 			if (n == 28) {
 				char cmd[8];
 				//strcpy(cmd, buffer+20);
-				if(strcmp((char *)(buffer + 20), "ALLok_ME") == 0){
+				if(strcmp((char *)(buffer + 20), "ALLok_ME") == 0) {
 					fprintf(stderr, "Allocation requested\n");
+					// allocateClient(cliaddr);
+					// onClientConnected(&cliaddr);
+					// socketCount--;
 				} else if (strcmp((char *)(buffer + 20), "DeAok_ME") == 0) {
 					fprintf(stderr, "Deallocation requested\n");
+					// deallocateClient(cliaddr.sin_addr.s_addr);
 				}
 			}
 			printf("n = %d, len = %d, msg: ", n, len);
@@ -88,8 +86,6 @@ int UdpListener::run() {
 			// Add the new connection to the list of connected clients
 			//allocateClient(client);
 
-			onClientConnected(client);
-			//socketCount--;
 		}
 
 		int i = 1;
@@ -143,20 +139,18 @@ void UdpListener::stop(){
 	running = false;
 }
 
-void UdpListener::allocateClient(int client) {
+void UdpListener::allocateClient(struct sockaddr_in client) {
 	unsigned i = 1;
 
-	while(m_master[i].fd > -1) i++;
+	while(m_clients[i].sin_family > 0) i++;
 	available--;
-
-	m_master[i].fd = client;
-	m_master[i].events = POLLIN;
+	m_clients[i] = client;
 }
 
-void UdpListener::deallocateClient(int client) {
+void UdpListener::deallocateClient(unsigned client) {
 	unsigned i = 1; // starts at 1, because internal listener socket is at 0
 	
-	while(m_master[i].fd != client) i++;
+	while(m_master[i].sin_addr.s_addr != client) i++;
 	available++;
 	
 	m_master[i].fd = -1;

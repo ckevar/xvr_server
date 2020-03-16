@@ -41,17 +41,18 @@ protected:
 	void broadcastToClients(int sendingClient, const char* msg, int length);
 
 	// Allocate client in the client set
-	void allocateClient(int client);
+	void allocateClient(struct sockaddr_in client);
 
 	// Deallocate client from the the client set
-	void deallocateClient(int clinet); 
+	void deallocateClient(struct sockaddr_in client); 
 
 private:
 
 	const char*		m_ipAddress;	// IP Address server will run on
 	int				m_port;			// Port # for the web service
 	int				m_socket;		// Internal FD for the listening socket
-	struct pollfd	m_master[MAX_CLIENTS + 1];		// Master file descriptor set
+	struct pollfd	m_master[1];		// Master file descriptor set
+	struct sockaddr_in	m_clients[MAX_CLIENTS];		// Master file descriptor set
 	int				available;				// amount of available clients
 	bool 			running;		// switch to run and stop the server's while
 };
