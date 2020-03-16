@@ -67,7 +67,7 @@ int UdpListener::run() {
 			unsigned char buffer[1024];
 			struct sockaddr_in cliaddr;
 			n = recvfrom(m_socket, (unsigned char *)buffer, 1024, MSG_WAITALL, (struct sockaddr *) &cliaddr, &len);
-			printf("Client: \n\tfamiliy: %d\n\tport: %d\n\t addr: %lu\n\t zero: %s\n", 
+			printf("Client: \n\tfamiliy: %d\n\tport: %d\n\t addr: %u\n\t zero: %s\n", 
 			       cliaddr.sin_family, cliaddr.sin_port, cliaddr.sin_addr.s_addr, cliaddr.sin_zero);
 			/*
 			printf("n = %d, len = %d, msg: ", n, len);
