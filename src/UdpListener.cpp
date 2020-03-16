@@ -149,7 +149,7 @@ void UdpListener::allocateClient(struct sockaddr_in client) {
 void UdpListener::deallocateClient(unsigned client) {
 	unsigned i = 1; // starts at 1, because internal listener socket is at 0
 	
-	while(m_master[i].sin_addr.s_addr != client) i++;
+	while(m_clients[i].sin_addr.s_addr != client) i++;
 	available++;
 	
 	m_master[i].fd = -1;
