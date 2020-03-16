@@ -67,15 +67,24 @@ int UdpListener::run() {
 			unsigned char buffer[1024];
 			struct sockaddr_in cliaddr;
 			n = recvfrom(m_socket, (unsigned char *)buffer, 1024, MSG_WAITALL, (struct sockaddr *) &cliaddr, &len);
-			printf("Client: \n\tfamiliy: %d\n\tport: %d\n\t addr: %u\n\t zero: %s\n", 
+			/*printf("Client: \n\tfamiliy: %d\n\tport: %d\n\t addr: %u\n\t zero: %s\n", 
 			       cliaddr.sin_family, cliaddr.sin_port, cliaddr.sin_addr.s_addr, cliaddr.sin_zero);
-			/*
+			*/
+			if (n == 28) {
+				char cmd[8];
+				//strcpy(cmd, buffer+20);
+				if(strcmp((char *)(buffer + 20), "ALLok_ME") == 0){
+					fprintf(stderr, "Allocation requested\n");
+				} else if (strcmp((char *)(buffer + 20), "DeAok_ME") == 0) {
+					fprintf(stderr, "Deallocation requested\n");
+				}
+			}
 			printf("n = %d, len = %d, msg: ", n, len);
 			for (int i = 0; i < n; i++){
 				printf("%d ", buffer[i]);
 			}
 			printf("\n");
-			*/
+
 			// Add the new connection to the list of connected clients
 			//allocateClient(client);
 
