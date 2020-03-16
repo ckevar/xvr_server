@@ -41,7 +41,7 @@ int UdpListener::init() {
 int UdpListener::run() {
 	unsigned char buffer[64];
 	int bytesRecv;
-	struct sockaddr_udp cliaddr;
+	struct sockaddr_udp client;
 
 	while (running) {
 		std::cout << "[DEBUG:] Available seats " << available << " out of " << MAX_CLIENTS << std::endl;
@@ -53,32 +53,32 @@ int UdpListener::run() {
 		// if it's an Incoming data?
 		if (m_master[0].revents == POLLIN) {
 			// Receive from a client
-			bytesRecv = recvfrom(m_socket, buffer, 64, MSG_WAITALL, (struct sockaddr *) &cliaddr.addr, &cliaddr.len);
+			bytesRecv = recvfrom(m_socket, buffer, 64, MSG_WAITALL, (struct sockaddr *) &client.addr, &client.len);
 			/*printf("Client: \n\tfamiliy: %d\n\tport: %d\n\t addr: %u\n\t zero: %s\n", 
-			       cliaddr.sin_family, cliaddr.sin_port, cliaddr.sin_addr.s_addr, cliaddr.sin_zero);
+			       client.sin_family, client.sin_port, client.sin_addr.s_addr, client.sin_zero);
 			*/
 			if (bytesRecv == 28) {	// 28 is the size of the when client asks/for allocation
 				// Client ac
 				if(strcmp((char *)(buffer + 20), "ALLok_ME") == 0) {
 					fprintf(stderr, "Allocation requested\n");
-					allocateClient(cliaddr);
-					// onClientConnected(&cliaddr);
+					allocateClient(client);
+					// onClientConnected(&client);
 					bytesRecv = -1;
 				} else if (strcmp((char *)(buffer + 20), "DeAok_ME") == 0) {
 					fprintf(stderr, "Deallocation requested\n");
-					deallocateClient(cliaddr.addr.sin_addr.s_addr);
+					deallocateClient(client.addr.sin_addr.s_addr);
 					bytesRecv = -1;
 				}
 			}
 
 			if (bytesRecv > -1) {
 
-				printf("n = %d, len = %d, msg: ", n, len);
+				printf("n = %d, len = %d, msg: ", bytesRecv, client.len);
 				for (int i = 0; i < n; i++){
 					printf("%d ", buffer[i]);
 				}
 				printf("\n");
-				// broadcastToClients(cliaddr.sin_addr.s_addr, buffer, bytesRecv);
+				// broadcastToClients(client.addr.sin_addr.s_addr, buffer, bytesRecv);
 				broadcastToClients(10, buffer, bytesRecv);
 			}
 
@@ -151,8 +151,8 @@ void UdpListener::sendToClient(const unsigned char *msg, int length, struct sock
 void UdpListener::broadcastToClients(unsigned sendingClient, const unsigned char* msg, int length)
 {	
 	for (int i = 0; i < MAX_CLIENTS; i++) {
-		if (m_clients[i].sin_family > 0) {
-			if (m_clients[i].sin_addr.s_addr != sendingClient) {
+		if (m_clients[i].addr.sin_family > 0) {
+			if (m_clients[i].addr.sin_addr.s_addr != sendingClient) {
 				sendToClient(msg, length, m_clients[i]);
 			}
 		}
