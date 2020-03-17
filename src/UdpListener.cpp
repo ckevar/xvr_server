@@ -61,7 +61,7 @@ int UdpListener::run() {
 			*/
 			if (bytesRecv == 28) {	// 28 is the size of the when client asks/for allocation
 				memcpy(cmd, buffer + 20, 8);
-
+				printf("cmd %s\n", cmd);
 				// did client ask for allocation?
 				if(strcmp(cmd, "ALLok_ME") == 0) {
 					fprintf(stderr, "Allocation requested\n");
