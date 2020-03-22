@@ -1,25 +1,26 @@
-#include "UdpListener.h"
+#include "CoronaShoot.h"
 
 #include <cstdio>
 #include <csignal>
+#include <ctime>
+#include <cstdlib>
 
-
-// UdpListener udpServer("0.0.0.0", 50023);
-UdpListener udpServer("0.0.0.0", 80);
+CoronaShoot coronaServer("0.0.0.0", 80);
 
 void signalHandler(int signum) {
 	printf("Terminating Server\n");
-	udpServer.stop();
+	coronaServer.stop();
 }
 
 int main(int argc, char const *argv[]) {
 
 	signal(SIGINT, signalHandler);
+	srand(time(NULL));
 
-	if (udpServer.init() != 0)
+	if (coronaServer.init() != 0)
 		return -1;
 
-	if(udpServer.run() < 0) return -1;
+	if(coronaServer.run() < 0) return -1;
 
 	return 0;
 }
