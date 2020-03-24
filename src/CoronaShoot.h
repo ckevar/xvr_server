@@ -7,7 +7,9 @@
 #include <cstring>
 
 // Global Variables
-extern float listReqPDU, idPDU;
+#define NAME_ME_PDU		99
+#define LIST_RQ_PDU		98
+#define LIST_RM_PDU		97
 
 struct PLAYER {
 	size_t name_len;
@@ -25,7 +27,7 @@ public:
 
 			m_pdu.data = m_pdu_array;
 			m_pdu.type = m_pdu_array + PDU_TYPE;
-			m_pdu.size_byte = m_pdu_array + PDU_FULL_LEN;
+			m_pdu.size_byte = m_pdu_array + XVRPDU_SIZE;
 			m_pdu.size_array = m_pdu_array + PDU_VECTOR_LEN;
 			m_pdu.array = m_pdu_array + PDU_BASE_LEN;
 
