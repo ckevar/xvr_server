@@ -135,7 +135,7 @@ void CoronaShoot::onMessageReceived(int clientSocket, const unsigned char* msg, 
 				if(*m_players[i].id > -1) {	// send if it's available
 					size_t len = m_players[i].name_len;
 					memcpy(m_pdu.array, m_players[i].name, len);
-					*m_pdu.size = PDU_BASE_LEN + len;
+					*m_pdu.size = XVRPDU_BASE_LEN + len;
 					*m_pdu.length = len;
 					sendToClient(clientSocket, m_pdu.data, *m_pdu.size);
 				}
