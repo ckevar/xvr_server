@@ -63,6 +63,7 @@ int TcpListener::run() {
 			client = accept(m_socket, nullptr, nullptr);
 			// Add the new connection to the list of connected clients
 			tmpAllocClient(client); // tcp allocation
+			onClientConnected(client);
 			socketCount--;
 			std::cerr << "{Allocation granted:} " << available << " free seats" << std::endl;
 		}
@@ -81,11 +82,8 @@ int TcpListener::run() {
 				if (bytesIn <= 0) {
 					// Drop the client
 					close(tmpSock);
-					std::cerr << "{debug:} socket closed " << std::endl;
 					deallocateClient(&tmpSock);
-					std::cerr << "{debug:} deallocated " << std::endl;
 					onClientDisconnected(tmpSock);
-					std::cerr << "{debug:} memory updated correctly " << std::endl;
 					std::cerr << "{Deallocation granted:} " << available << " free seats" << std::endl;
 				}
 				else {
@@ -103,10 +101,8 @@ int TcpListener::run() {
 
 	i = 1;
 	while (available != MAX_CLIENTS) {
-
 		if (m_master[i].fd > -1) {
 			close(m_master[i].fd);
-			m_master[i].fd = -1;
 			available++;
 		}
 		i++;
@@ -146,7 +142,7 @@ void TcpListener::allocateClient(int client) {
 	unsigned i = 1;
 
 	while(m_master[i].fd != client) i++;
-	allocStatus[i - 1] = 1; // fully allocated
+	allocStatus[i] = 1; // fully allocated
 }
 
 void TcpListener::deallocateClient(int *client) {
@@ -156,17 +152,10 @@ void TcpListener::deallocateClient(int *client) {
 	while((m_master[i].fd != *client) && (i <= MAX_CLIENTS)) i++;
 	if (i < MAX_CLIENTS) {
 		available++;
-		memcpy(tmp, m_master + i + 1, sizeof(struct pollfd) * (MAX_CLIENTS - available - i));
-		memcpy(m_master + i, tmp, sizeof(struct pollfd) * (MAX_CLIENTS - available - i));
+		m_master[i].fd = -1;
+		m_master[i].events = 0;
+		allocStatus[i] = 0;
 
-		m_master[available].fd = -1;
-		m_master[available].events = 0;
-
-		memcpy(tmpState, allocStatus + i, MAX_CLIENTS - available - i);
-		memcpy(allocStatus + i - 1, tmpState, MAX_CLIENTS - available - i);
-
-		allocStatus[i - 1] = 0;
-		*client = i - 1;
 	}
 }
 
@@ -177,10 +166,10 @@ void TcpListener::sendToClient(int clientSocket, const unsigned char* msg, int l
 
 void TcpListener::broadcastToClients(int sendingClient, const unsigned char* msg, int length) {
 	unsigned i = 0;
-	unsigned j = 0;
+	unsigned j = 1;
 	int outSock;
 	while((j < MAX_CLIENTS) && (i < available)){
-		outSock = m_master[j + 1].fd;
+		outSock = m_master[j].fd;
 		if ((allocStatus[j]) && (sendingClient != outSock)) {
 			i++;
 			sendToClient(outSock, msg, length);

@@ -21,72 +21,75 @@ std::string badassName[] = {"Big Papa", "Cobra", "Creep", "Doom",
 "Ramona", "Elektra", "Hypernova", "Snake Eye", 
 "Red Dog", "Black Cat", "Firebringer", "Eternity", 
 "Maniac", "Bitten", "X-Treme"};
-static unsigned char pdu_header[] = {255, 88, 86, 82, 95, 48, 50, 255,
-                                                 0, 0, 0, 21, // pdu length
-                                                 255, 1, 0, 255, 5, // 5 specifies the type, here, it's string
-                                                 0, 0, 0, 0}; // message ñength 
+
 float listReqPDU = 98;
 float idPDU = 99;
 float addListPDU[] = {listReqPDU, 0.f, 1.f};
 float rmListPDU[] = {97, 0.f, 1.f};
+float giveIDPDU[] = {100, 0.f, 0.f};
+
+void CoronaShoot::buildPDU(unsigned char type, void *msg, unsigned char len) {
+	if(type == PDU_REAL_T) {
+		memcpy(m_pdu.array, msg, len*4);
+		*m_pdu.size_byte = PDU_BASE_LEN + len * 4;
+	} else if (type == PDU_CHAR_T) {
+		memcpy(m_pdu.array, msg, len);
+		*m_pdu.size_byte = PDU_BASE_LEN + len;
+	}
+	*m_pdu.type = type;
+	*m_pdu.size_array = len;
+}
 
 void CoronaShoot::onClientConnected(int clientSocket) {
+	giveIDPDU[2] = (float) (clientSocket - 3); // 3, due to the server has descriptor 3, so the clients starts in 4;
+	buildPDU(PDU_REAL_T, giveIDPDU, 3);
+	sendToClient(clientSocket, m_pdu.data, *m_pdu.size_byte);
+}
+
+void CoronaShoot::nameClient(int clientSocket) {
 	// Send a welcome message to the connected client
-
-	unsigned char pdu[255];
 	unsigned ni = rand() % 60;
-	size_t len;
-	len = badassName[ni].size();
+	size_t len = badassName[ni].size();
+	int clientID = clientSocket - 3;
 
-	memcpy(pdu, pdu_header, PDU_BASE_LEN);
-	memcpy(pdu + PDU_BASE_LEN, badassName[ni].c_str(), len);
-	pdu[PDU_FULL_LEN] += len;
-	pdu[PDU_VECTOR_LEN] = len;
-
-	sendToClient(clientSocket, pdu, pdu[PDU_FULL_LEN]);
+	*m_players[clientID].id = (float) clientID;
+	m_players[clientID].name = (char *) badassName[ni].c_str();
+	m_players[clientID].name_len = len;
 	totalPlayers += 1;
-	pn[(unsigned) totalPlayers - 1] = ni;
+
+	printf("%s has joined @ socket %d\n", m_players[clientID].name, clientSocket);
+
+	buildPDU(PDU_CHAR_T, m_players[clientID].name, len);
+	sendToClient(clientSocket, m_pdu.data, *m_pdu.size_byte);
 
 	if (totalPlayers > 1) {
-		// Broadcast there's a new 
-		pdu[PDU_TYPE] = PDU_REAL_T;
-		memcpy(pdu + PDU_BASE_LEN, &addListPDU, 12);
-		pdu[PDU_FULL_LEN] = PDU_BASE_LEN + 12;
-        	pdu[PDU_VECTOR_LEN] = 3;
-		broadcastToClients(clientSocket, pdu, pdu[PDU_FULL_LEN]);
+		addListPDU[2] = *m_players[clientID].id;
+		// Broadcast there's a new player
+		buildPDU(PDU_REAL_T, &addListPDU, 3);
+		broadcastToClients(clientSocket, m_pdu.data, *m_pdu.size_byte);
 
 		// Broadcaste the new's name
-              	memcpy(pdu + PDU_BASE_LEN, badassName[ni].c_str(), len);
-                pdu[PDU_TYPE] = PDU_CHAR_T;
-		pdu[PDU_FULL_LEN] = PDU_BASE_LEN + len;
-                pdu[PDU_VECTOR_LEN] = len;
-                broadcastToClients(clientSocket, pdu, pdu[PDU_FULL_LEN]);
+		buildPDU(PDU_CHAR_T, m_players[clientID].name, len);
+		broadcastToClients(clientSocket, m_pdu.data, *m_pdu.size_byte);
 	}
 }
 
 void CoronaShoot::onClientDisconnected(int clientSocket) {
-	unsigned char pdu[255];
-	unsigned tmp[MAX_CLIENTS];
-	rmListPDU[2] = clientSocket;
+	int clientId = clientSocket - 3;
 	totalPlayers -= 1;
 
-	memcpy(pdu, pdu_header, PDU_BASE_LEN);
-	memcpy(pdu + PDU_BASE_LEN, &rmListPDU, 12);
-	pdu[PDU_TYPE] = PDU_REAL_T;
-	pdu[PDU_FULL_LEN] = PDU_BASE_LEN + 12;
-	pdu[PDU_VECTOR_LEN] = 3;
-	broadcastToClients(0, pdu, pdu[PDU_FULL_LEN]);
-	printf("{debug@onClientDisconnect:} memcpy to temp %d\n", (unsigned)totalPlayers - clientSocket);
-	memcpy(tmp, pn + clientSocket + 1, ((unsigned)totalPlayers - clientSocket) * sizeof(unsigned));
-	printf("{debug@onClient:} successfully copied\n");
-	memcpy(pn + clientSocket, tmp, ((unsigned)totalPlayers - clientSocket) * sizeof(unsigned));
-	printf("{debug@onClientDisconnect:} memcpy to mem \n");
+	rmListPDU[2] = *m_players[clientId].id;
+	*m_players[clientId].id = -1;
 
+	printf("%s has left from socket %d\n", m_players[clientId].name, clientSocket);
+	m_players[clientId].name = 0;
+
+	buildPDU(PDU_REAL_T, rmListPDU, 3);
+	broadcastToClients(0, m_pdu.data, *m_pdu.size_byte);
 }
 
 void CoronaShoot::onMessageReceived(int clientSocket, const unsigned char* msg, int length) {
 	float pdu_id;
-	unsigned char pdu[255];
 	unsigned clientID;
 
     	if ((length == 29)) {
@@ -94,24 +97,33 @@ void CoronaShoot::onMessageReceived(int clientSocket, const unsigned char* msg, 
 		if (pdu_id == idPDU) {
                 	memcpy(&clientID, msg + 25, 4);
                         allocateClient(clientSocket); // service allocation
-                        onClientConnected(clientSocket);
+                        nameClient(clientSocket);
 
     	       	} else if (pdu_id == listReqPDU) {
 
-			memcpy(pdu, msg, length);	// copy original message
-			memcpy(pdu + length, &totalPlayers, 4);	// adds a new element
-			pdu[PDU_FULL_LEN] += 4;		// update xvr pdu length
-			pdu[PDU_VECTOR_LEN] += 1;	// update game pdu length
-			sendToClient(clientSocket, pdu, pdu[PDU_FULL_LEN]);
+			float tmpIds[totalPlayers];
+			memcpy(m_pdu.data, msg, length);	// copy original message
+			int j = 0;
+			for(int i = 1; i < MAX_CLIENTS; i++){
+				if(*m_players[i].id > -1) {
+					tmpIds[j] = *m_players[i].id;
+					j++;
+				}
+			}
+			memcpy(m_pdu.data + length, tmpIds, 4*totalPlayers);	// adds a new element
+			*m_pdu.size_byte += 4*totalPlayers;
+			*m_pdu.size_array += totalPlayers;			// update game pdu length
+			sendToClient(clientSocket, m_pdu.data, *m_pdu.size_byte);
 
-			memcpy(pdu, pdu_header, PDU_BASE_LEN); // to send Text, without game header
-
-			for(int i = 0; i < totalPlayers; i++) {
-				size_t len = badassName[pn[i]].size();
-				memcpy(pdu + PDU_BASE_LEN, badassName[pn[i]].c_str(), len);
-        			pdu[PDU_FULL_LEN] = PDU_BASE_LEN + len;
-        			pdu[PDU_VECTOR_LEN] = len;
-				sendToClient(clientSocket, pdu, pdu[PDU_FULL_LEN]);
+			*m_pdu.type = PDU_CHAR_T;
+			for(int i = 1; i < MAX_CLIENTS; i++) {
+				if(*m_players[i].id > -1) {
+					size_t len = m_players[i].name_len;
+					memcpy(m_pdu.array, m_players[i].name, len);
+					*m_pdu.size_byte = PDU_BASE_LEN + len;
+					*m_pdu.size_array = len;
+					sendToClient(clientSocket, m_pdu.data, *m_pdu.size_byte);
+				}
 			}
 		}
         } else {

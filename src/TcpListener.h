@@ -12,7 +12,7 @@ class TcpListener
 public:
 
 	TcpListener(const char* ipAddress, int port) :
-		m_ipAddress(ipAddress), m_port(port) { }
+		m_ipAddress(ipAddress), m_port(port) { ticketID = 0;}
 
 	// Initialize the listener
 	int init();
@@ -20,7 +20,7 @@ public:
 	// Run the listener
 	int run();
 
-	// Stop Listener 
+	// Stop Listener
 	void stop();
 
 protected:
@@ -51,13 +51,14 @@ protected:
 
 private:
 
-	const char*		m_ipAddress;	// IP Address server will run on
-	int				m_port;			// Port # for the web service
-	int				m_socket;		// Internal FD for the listening socket
+	const char*	m_ipAddress;	// IP Address server will run on
+	int		m_port;			// Port # for the web service
+	int		m_socket;		// Internal FD for the listening socket
 	struct pollfd	m_master[MAX_CLIENTS + 1];		// Master file descriptor set
-	unsigned char allocStatus[MAX_CLIENTS];		// Allocation status are they temporary or fixed
-	int				available;		// amount of available clients
-	bool 			running;		// switch to run and stop the server's while
+	unsigned char 	allocStatus[MAX_CLIENTS + 1];		// Allocation status are they temporary or fixed
+	int		available;		// amount of available clients
+	int 		ticketID;
+	bool 		running;		// switch to run and stop the server's while
 };
 
 #endif
