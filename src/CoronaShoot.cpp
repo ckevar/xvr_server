@@ -29,10 +29,10 @@ float set_idPDU[] 	= {0.f, 0.f, 0.f};
 void CoronaShoot::buildPDU(unsigned char type, void *msg, unsigned char len) {
 	if(type == PDU_REAL_T) {
 		memcpy(m_pdu.array, msg, len*4);
-		*m_pdu.size_byte = PDU_BASE_LEN + len * 4;
-	} else if (type == PDU_CHAR_T) {
+		*m_pdu.size = XVRPDU_BASE_LEN + len * 4;
+	} else if (type == XVRPDU_CHAR_T) {
 		memcpy(m_pdu.array, msg, len);
-		*m_pdu.size_byte = PDU_BASE_LEN + len;
+		*m_pdu.size_byte = XVRPDU_BASE_LEN + len;
 	}
 	*m_pdu.type = type;
 	*m_pdu.size_array = len;
@@ -40,7 +40,7 @@ void CoronaShoot::buildPDU(unsigned char type, void *msg, unsigned char len) {
 
 void CoronaShoot::onClientConnected(int clientSocket) {
 	set_idPDU[2] = (float) (clientSocket - 3); // 3, due to the server has descriptor 3, so the clients starts in 4;
-	buildPDU(PDU_REAL_T, set_idPDU, 3);
+	buildPDU(XVRPDU_REAL_T, set_idPDU, 3);
 	sendToClient(clientSocket, m_pdu.data, *m_pdu.size_byte);
 }
 
@@ -57,17 +57,17 @@ void CoronaShoot::nameClient(int clientSocket) {
 
 	printf("%s has joined @ socket %d\n", m_players[clientID].name, clientSocket);
 
-	buildPDU(PDU_CHAR_T, m_players[clientID].name, len);
+	buildPDU(XVRPDU_CHAR_T, m_players[clientID].name, len);
 	sendToClient(clientSocket, m_pdu.data, *m_pdu.size_byte);
 
 	if (totalPlayers > 1) {
 		add_listPDU[2] = *m_players[clientID].id;
 		// Broadcast there's a new player
-		buildPDU(PDU_REAL_T, add_listPDU, 3);
+		buildPDU(XVRPDU_REAL_T, add_listPDU, 3);
 		broadcastToClients(clientSocket, m_pdu.data, *m_pdu.size_byte);
 
 		// Broadcaste the new's name
-		buildPDU(PDU_CHAR_T, m_players[clientID].name, len);
+		buildPDU(XVRPDU_CHAR_T, m_players[clientID].name, len);
 		broadcastToClients(clientSocket, m_pdu.data, *m_pdu.size_byte);
 	}
 }
@@ -82,7 +82,7 @@ void CoronaShoot::onClientDisconnected(int clientSocket) {
 	printf("%s has left from socket %d\n", m_players[clientId].name, clientSocket);
 	m_players[clientId].name = 0;
 
-	buildPDU(PDU_REAL_T, rm_listPDU, 3);
+	buildPDU(XVRPDU_REAL_T, rm_listPDU, 3);
 	broadcastToClients(0, m_pdu.data, *m_pdu.size_byte);
 }
 

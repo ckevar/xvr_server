@@ -2,7 +2,7 @@
 #define XVR_PDU_H
 
 #define XVRPDU_SIZE			11 // XVR total pdu length
-#define XVRPDU_VECTOR_LEN	20 // XVR total vector length
+#define XVRPDU_MSG_LEN		20 // XVR total vector length
 #define XVRPDU_BASE_LEN		21 // XVR position where it starts
 #define XVRPDU_TYPE			16 // XVR type 5:char, 8 float32_t
 #define XVRPDU_REAL_T		8  // XVR real float32_t type
@@ -19,8 +19,8 @@ static unsigned char xvrpdu_base[] = {
 struct XVRPDU {
 	unsigned char *data;
 	unsigned char *type;
-	unsigned char *size_byte;
-	unsigned char *size_array;
+	unsigned char *size;
+	unsigned char *length;
 	unsigned char *array;
 };
 

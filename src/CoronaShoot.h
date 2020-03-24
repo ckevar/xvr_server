@@ -23,13 +23,13 @@ public:
 	CoronaShoot(const char* ipAddress, int port) :
 		TcpListener(ipAddress, port) {
 			totalPlayers = 0;
-			memcpy(m_pdu_array, pdu_header, PDU_BASE_LEN);
+			memcpy(m_pdu_array, pdu_header, XVRPDU_BASE_LEN);
 
-			m_pdu.data = m_pdu_array;
-			m_pdu.type = m_pdu_array + PDU_TYPE;
-			m_pdu.size_byte = m_pdu_array + XVRPDU_SIZE;
-			m_pdu.size_array = m_pdu_array + PDU_VECTOR_LEN;
-			m_pdu.array = m_pdu_array + PDU_BASE_LEN;
+			m_pdu.data   = m_pdu_array;
+			m_pdu.type   = m_pdu_array + XVRPDU_TYPE;
+			m_pdu.size   = m_pdu_array + XVRPDU_SIZE;
+			m_pdu.length = m_pdu_array + XVRPDU_VECTOR_LEN;
+			m_pdu.array  = m_pdu_array + XVRPDU_BASE_LEN;
 
 			for(int i = 0; i < MAX_CLIENTS; i++) {
 				id_players_array[i + 1] = -1;
