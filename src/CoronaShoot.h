@@ -28,7 +28,7 @@ public:
 			m_pdu.data   = m_pdu_array;
 			m_pdu.type   = m_pdu_array + XVRPDU_TYPE;
 			m_pdu.size   = m_pdu_array + XVRPDU_SIZE;
-			m_pdu.length = m_pdu_array + XVRPDU_VECTOR_LEN;
+			m_pdu.length = m_pdu_array + XVRPDU_MSG_LEN;
 			m_pdu.array  = m_pdu_array + XVRPDU_BASE_LEN;
 
 			for(int i = 0; i < MAX_CLIENTS; i++) {
