@@ -8,7 +8,7 @@
 #define XVRPDU_REAL_T		8  // XVR real float32_t type
 #define XVRPDU_CHAR_T		5  // XVR char type
 
-static unsigned char xvrpdu_base[] = {
+static unsigned char XVRpdu_base[] = {
 	255, 88, 86, 82, 95, 48, 50, 255, 	// XVR NetVarSendFromTCP / XVR NetVarReceiveFromTCP header
 	0, 0, 0, 21, 						// XVR PDU length in bytes
 	255, 1, 0, 255, 					// XVR PDU Uknonwn 
