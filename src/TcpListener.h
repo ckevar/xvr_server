@@ -47,7 +47,7 @@ protected:
 	void allocateClient(int client);
 
 	// Deallocate client from the the client set
-	void deallocateClient(int *clinet);
+	void deallocateClient(unsigned i);
 
 private:
 

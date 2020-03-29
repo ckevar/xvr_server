@@ -21,12 +21,12 @@ int TcpListener::init() {
 	inet_pton(AF_INET, m_ipAddress, &hint.sin_addr);
 
 	if (bind(m_socket, (sockaddr*)&hint, sizeof(hint)) < 0) {
-		fprintf(stderr, "[ERROR:] at binding");
+		fprintf(stderr, "[ERROR:] at binding\n");
 		return -1;
 	}
 	// Tell the socket is for listening
 	if (listen(m_socket, SOMAXCONN) < 0) {
-		fprintf(stderr, "[ERROR:] at listen");
+		fprintf(stderr, "[ERROR:] at listen\n");
 		return -1;
 	}
 
@@ -71,9 +71,8 @@ int TcpListener::run() {
 		i = 1;
 		// It's an inbound message
 		// Loop through all the current connections / potential connect
-		while (socketCount > 0) {
-
-			if(m_master[i].revents == POLLIN) {
+		while ((socketCount > 0) && (i < MAX_CLIENTS)) {
+			if(m_master[i].revents & POLLIN) {
 				memset(buf, 0, BUF_SIZE);
 				tmpSock = m_master[i].fd;
 
@@ -82,7 +81,7 @@ int TcpListener::run() {
 				if (bytesIn <= 0) {
 					// Drop the client
 					close(tmpSock);
-					deallocateClient(&tmpSock);
+					deallocateClient(i);
 					onClientDisconnected(tmpSock);
 					std::cerr << "{Deallocation granted:} " << available << " free seats" << std::endl;
 				}
@@ -145,18 +144,11 @@ void TcpListener::allocateClient(int client) {
 	allocStatus[i] = 1; // fully allocated
 }
 
-void TcpListener::deallocateClient(int *client) {
-	unsigned i = 1; // starts at 1, because internal listener socket is at 0
-	struct pollfd tmp[MAX_CLIENTS];
-	unsigned char tmpState[MAX_CLIENTS];
-	while((m_master[i].fd != *client) && (i <= MAX_CLIENTS)) i++;
-	if (i < MAX_CLIENTS) {
-		available++;
-		m_master[i].fd = -1;
-		m_master[i].events = 0;
-		allocStatus[i] = 0;
-
-	}
+void TcpListener::deallocateClient(unsigned i) {
+	available++;
+	m_master[i].fd = -1;
+	m_master[i].events = 0;
+	allocStatus[i] = 0;
 }
 
 
