@@ -60,7 +60,7 @@ void CoronaShoot::nameClient(int clientSocket) {
 	m_players[clientID].name_len = len;
 	totalPlayers += 1;
 
-	printf("%s has joined @ socket %d\n", m_players[clientID].name, clientSocket);
+	printf("\t%s has joined @ socket %d\n", m_players[clientID].name, clientSocket);
 
 	buildPDU(XVRPDU_CHAR_T, m_players[clientID].name, len);
 	sendToClient(clientSocket, m_pdu.data, *m_pdu.size);
@@ -84,7 +84,7 @@ void CoronaShoot::onClientDisconnected(int clientSocket) {
 	rm_listPDU[2] = *m_players[clientId].id;
 	*m_players[clientId].id = -1;
 
-	printf("%s has left from socket %d\n", m_players[clientId].name, clientSocket);
+	printf("\t%s has left from socket %d\n", m_players[clientId].name, clientSocket);
 	m_players[clientId].name = 0;
 
 	buildPDU(XVRPDU_REAL_T, rm_listPDU, 3);
@@ -102,7 +102,7 @@ void CoronaShoot::onMessageReceived(int clientSocket, const unsigned char* msg, 
 
 		// The new-joined player asks for a name
 		if (pdu_id == NAME_ME_PDU) {
-            allocateClient(clientSocket); 	// service allocation
+            //allocateClient(clientSocket); 	// service allocation
             nameClient(clientSocket);
        	}
 
@@ -140,10 +140,13 @@ void CoronaShoot::onMessageReceived(int clientSocket, const unsigned char* msg, 
 					sendToClient(clientSocket, m_pdu.data, *m_pdu.size);
 				}
 			}
+			// TODO: broadcast, there's a new guy in town
+			allocateClient(clientSocket); 	// service allocation
+
 		}
 	// if it's not a header, then broadcast the message to the other players.
 	} else {
-		// broadcastToClients(clientSocket, msg, length);
+		broadcastToClients(clientSocket, msg, length);
 	}
 
 }

@@ -65,7 +65,7 @@ int TcpListener::run() {
 			tmpAllocClient(client); // tcp allocation
 			onClientConnected(client);
 			socketCount--;
-			std::cerr << "{Allocation granted:} " << available << " free seats" << std::endl;
+			std::cerr << "{Temporary Allocation granted:} " << available << " free seats" << std::endl;
 		}
 
 		i = 1;
@@ -81,9 +81,12 @@ int TcpListener::run() {
 				if (bytesIn <= 0) {
 					// Drop the client
 					close(tmpSock);
-					deallocateClient(i);
-					onClientDisconnected(tmpSock);
-					std::cerr << "{Deallocation granted:} " << available << " free seats" << std::endl;
+					if(deallocateClient(i) == 0) {
+						onClientDisconnected(tmpSock);
+						std::cerr << "{Deallocation granted:} " << available << " free seats" << std::endl;
+					} else {
+						std::cerr << "{Deallocation granted:} temporary client, " << available << std::endl;
+					}
 				}
 				else {
 					onMessageReceived(tmpSock, buf, bytesIn);
@@ -144,11 +147,15 @@ void TcpListener::allocateClient(int client) {
 	allocStatus[i] = 1; // fully allocated
 }
 
-void TcpListener::deallocateClient(unsigned i) {
+unsigned TcpListener::deallocateClient(unsigned i) {
 	available++;
 	m_master[i].fd = -1;
 	m_master[i].events = 0;
-	allocStatus[i] = 0;
+	if (allocStatus[i] == 1) {
+		allocStatus[i] = 0;
+		return 0;
+	}
+	return 1;
 }
 
 
