@@ -99,17 +99,19 @@ int TcpListener::run() {
 
 	// Remove the listening socket from the master file descriptor set and close it
 	// to prevent anyone else trying to connect.
-	close(m_master[0].fd);
 
 	i = 1;
 	while (available != MAX_CLIENTS) {
 		if (m_master[i].fd > -1) {
-			close(m_master[i].fd);
+			std::cout << "Closing connection " << m_master[i].fd << "... " << std::endl;
+			int rtc = close(m_master[i].fd);
+			std::cout << "Close valued " << rtc << std::endl;
 			available++;
 		}
 		i++;
 	}
 
+	close(m_master[0].fd);
 	return 0;
 }
 
@@ -131,20 +133,24 @@ void TcpListener::tmpAllocClient(int client) {
 		i = 1;
 	}
 
-	while(m_master[i].fd > -1) i++;
+	//while(m_master[i].fd > -1) i++;
 	available--;
 
-	m_master[i].fd = client;
-	m_master[i].events = POLLIN;
-	allocStatus[i] = 0; // temporary allocated
+	//m_master[i].fd = client;
+	//m_master[i].events = POLLIN;
+	//allocStatus[i] = 0; // temporary allocated
+	m_master[client - 3].fd = client;
+	m_master[client - 3].events = POLLIN;
+	allocStatus[client - 3] = 0;
 }
 
 void TcpListener::allocateClient(int client) {
 
-	unsigned i = 1;
+	//unsigned i = 1;
 
-	while(m_master[i].fd != client) i++;
-	allocStatus[i] = 1; // fully allocated
+	//while(m_master[i].fd != client) i++;
+	allocStatus[client - 3] = 1; // fully allocated
+	std::cerr << "{Fully allocated:} client " << client << "@ socket " << m_master[client - 3].fd << std::endl;
 }
 
 unsigned TcpListener::deallocateClient(unsigned i) {

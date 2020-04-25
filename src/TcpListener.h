@@ -58,7 +58,7 @@ private:
 	unsigned char 	allocStatus[MAX_CLIENTS + 1];		// Allocation status are they temporary or fixed
 	int		available;		// amount of available clients
 	int 		ticketID;
-	bool 		running;		// switch to run and stop the server's while
+	volatile bool 	running;		// switch to run and stop the server's while
 };
 
 #endif

@@ -8,7 +8,7 @@
 
 std::string badassName[] = {"Big Papa", "Cobra", "Creep", "Doom", 
 "Dragon", "Mad Dog", "Ranger", "Ripley", 
-"Skull crasher", "Slasher", "zero", "Iron Heart", 
+"Skull Casher", "Slasher", "zero", "Iron Heart", 
 "Golem", "Rex", "Cyclops", "Leviathan", 
 "Fury", "Terminator", "Mad Max", "Darko", 
 "the Butcher", "Maximu", "Mr. Blonde", "Thor", 
@@ -51,7 +51,7 @@ void CoronaShoot::onClientConnected(int clientSocket) {
 
 void CoronaShoot::nameClient(int clientSocket) {
 	// Send a welcome message to the connected client
-	unsigned ni = rand() % 60;
+	unsigned ni = rand() % 59;
 	size_t len = badassName[ni].size();
 	int clientID = clientSocket - 3;
 
@@ -60,6 +60,7 @@ void CoronaShoot::nameClient(int clientSocket) {
 	m_players[clientID].name_len = len;
 	totalPlayers += 1;
 
+	printf("\tIndex of names is %d\n", ni);
 	printf("\t%s has joined @ socket %d\n", m_players[clientID].name, clientSocket);
 
 	buildPDU(XVRPDU_CHAR_T, m_players[clientID].name, len);
